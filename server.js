@@ -88,6 +88,38 @@ const server = http.createServer((req, res) => {
       tasks.splice(index, 1);
       return sendJson(204, {});
     }
+
+    if (method === "PATCH") {
+      const task = tasks.find((task) => task.id === id);
+
+      if (!task) {
+        return sendJson(404, { error: "Task not found" });
+      }
+
+      let body = "";
+
+      req.on("data", (chunk) => {
+        body += chunk;
+      });
+
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body);
+
+          if (typeof parsed.done !== "boolean") {
+            return sendJson(400, { error: "Done must be a boolean" });
+          }
+
+          task.done = parsed.done;
+
+          return sendJson(200, task);
+        } catch {
+          return sendJson(400, { error: "Invalid JSON" });
+        }
+      });
+
+      return;
+    }
   }
 
   sendJson(404, { error: "Not found" });
