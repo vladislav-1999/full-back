@@ -1,3 +1,10 @@
 {
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.3"
+  }
 }
