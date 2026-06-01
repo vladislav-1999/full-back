@@ -1,11 +1,6 @@
-//  Слой HTTP
-
 import type { Request, Response, RequestHandler } from 'express'
 import { tasksService, NotFoundError } from '../services/tasksService.js'
 import type { CreateTaskInput, UpdateTaskInput } from '../schemas/taskSchemas.js'
-
-// Маленький помощник, чтобы не повторять try/catch в каждом методе.
-// Берёт async-функцию, оборачивает в try/catch с правильными HTTP-кодами.
 
 function handleErrors(fn: (req: Request, res: Response) => void | Promise<void>): RequestHandler {
 	return async (req, res) => {
@@ -16,7 +11,6 @@ function handleErrors(fn: (req: Request, res: Response) => void | Promise<void>)
 				res.status(404).json({ error: err.message })
 				return
 			}
-			// Что-то неизвестное — это уже наша ошибка, не клиента.
 			console.error(err)
 			res.status(500).json({ error: 'Internal server error' })
 		}
@@ -24,30 +18,30 @@ function handleErrors(fn: (req: Request, res: Response) => void | Promise<void>)
 }
 
 export const taskController = {
-	getAll: handleErrors((_req, res) => {
-		const tasks = tasksService.getAll()
+	getAll: handleErrors(async (_req, res) => {
+		const tasks = await tasksService.getAll()
 		res.json(tasks)
 	}),
 
-	getById: handleErrors((req, res) => {
+	getById: handleErrors(async (req, res) => {
 		const { id } = req.params as unknown as { id: number }
-		res.json(tasksService.getById(id))
+		res.json(await tasksService.getById(id))
 	}),
 
-	create: handleErrors((req, res) => {
+	create: handleErrors(async (req, res) => {
 		const input = req.body as CreateTaskInput
-		res.status(201).json(tasksService.create(input))
+		res.status(201).json(await tasksService.create(input))
 	}),
 
-	update: handleErrors((req, res) => {
+	update: handleErrors(async (req, res) => {
 		const { id } = req.params as unknown as { id: number }
 		const input = req.body as UpdateTaskInput
-		res.json(tasksService.update(id, input))
+		res.json(await tasksService.update(id, input))
 	}),
 
-	remove: handleErrors((req, res) => {
+	remove: handleErrors(async (req, res) => {
 		const { id } = req.params as unknown as { id: number }
-		tasksService.remove(id)
+		await tasksService.remove(id)
 		res.status(204).end()
 	}),
 }
