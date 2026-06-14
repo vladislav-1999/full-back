@@ -1,21 +1,6 @@
-import type { Request, Response, RequestHandler } from 'express'
-import { tasksService, NotFoundError } from '../services/tasksService.js'
+import { tasksService } from '../services/tasksService.js'
 import type { CreateTaskInput, UpdateTaskInput } from '../schemas/taskSchemas.js'
-
-function handleErrors(fn: (req: Request, res: Response) => void | Promise<void>): RequestHandler {
-	return async (req, res) => {
-		try {
-			await fn(req, res)
-		} catch (err) {
-			if (err instanceof NotFoundError) {
-				res.status(404).json({ error: err.message })
-				return
-			}
-			console.error(err)
-			res.status(500).json({ error: 'Internal server error' })
-		}
-	}
-}
+import { handleErrors } from './handleErrors.js'
 
 export const taskController = {
 	getAll: handleErrors(async (_req, res) => {

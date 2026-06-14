@@ -1,13 +1,7 @@
 import { tasksRepository } from '../repositories/tasksRepository.js'
 import type { Task } from '../types/task.js'
 import type { CreateTaskInput, UpdateTaskInput } from '../schemas/taskSchemas.js'
-
-export class NotFoundError extends Error {
-	constructor(message: string) {
-		super(message)
-		this.name = 'NotFoundError'
-	}
-}
+import { NotFoundError } from '../errors.js'
 
 export const tasksService = {
 	async getAll(): Promise<Task[]> {

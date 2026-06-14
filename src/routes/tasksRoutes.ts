@@ -1,5 +1,3 @@
-// Слой маршрутизации. Связывает URL-ы с методами контроллера. Самый тонкий файл — буквально таблица соответствий
-
 import { Router } from 'express'
 import { taskController } from '../controllers/tasksController.js'
 import { validate } from '../middlewares/validate.js'
