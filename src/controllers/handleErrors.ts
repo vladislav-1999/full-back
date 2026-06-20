@@ -1,5 +1,5 @@
 import type { Request, Response, RequestHandler } from 'express'
-import { NotFoundError, ConflictError } from '../errors.js'
+import { NotFoundError, ConflictError, UnauthorizedError } from '../errors.js'
 
 export function handleErrors(fn: (req: Request, res: Response) => void | Promise<void>): RequestHandler {
 	return async (req, res) => {
@@ -12,6 +12,10 @@ export function handleErrors(fn: (req: Request, res: Response) => void | Promise
 			}
 			if (err instanceof ConflictError) {
 				res.status(409).json({ error: err.message })
+				return
+			}
+			if (err instanceof UnauthorizedError) {
+				res.status(401).json({ error: err.message })
 				return
 			}
 			console.error(err)
