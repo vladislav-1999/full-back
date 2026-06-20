@@ -4,6 +4,9 @@ export const tasks = pgTable('tasks', {
 	id: integer().primaryKey().generatedAlwaysAsIdentity(),
 	title: varchar({ length: 200 }).notNull(),
 	done: boolean().notNull().default(false),
+	userId: integer()
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
 })
 
 export const users = pgTable('users', {
