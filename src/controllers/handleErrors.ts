@@ -1,10 +1,12 @@
 import type { Request, Response, RequestHandler } from 'express'
 import { NotFoundError, ConflictError, UnauthorizedError } from '../errors.js'
 
-export function handleErrors(fn: (req: Request, res: Response) => void | Promise<void>): RequestHandler {
+export function handleErrors<P = Record<string, string>, ReqBody = unknown>(
+	fn: (req: Request<P, unknown, ReqBody>, res: Response) => void | Promise<void>,
+): RequestHandler {
 	return async (req, res) => {
 		try {
-			await fn(req, res)
+			await fn(req as Request<P, unknown, ReqBody>, res)
 		} catch (err) {
 			if (err instanceof NotFoundError) {
 				res.status(404).json({ error: err.message })

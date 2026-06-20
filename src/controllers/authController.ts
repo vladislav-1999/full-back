@@ -1,14 +1,14 @@
 import { handleErrors } from './handleErrors.js'
-import { type RegisterInput, type LoginInput } from '../schemas/authSchemas.js'
 import { authService } from '../services/authService.js'
+import type { RegisterInput, LoginInput } from '../schemas/authSchemas.js'
 
 export const authController = {
-	register: handleErrors(async (req, res) => {
-		const input = req.body as RegisterInput
+	register: handleErrors<Record<string, string>, RegisterInput>(async (req, res) => {
+		const input = req.body
 		res.status(201).json(await authService.register(input))
 	}),
-	login: handleErrors(async (req, res) => {
-		const input = req.body as LoginInput
+	login: handleErrors<Record<string, string>, LoginInput>(async (req, res) => {
+		const input = req.body
 		res.status(200).json(await authService.login(input))
 	}),
 }
