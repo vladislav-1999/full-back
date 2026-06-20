@@ -16,5 +16,6 @@ export const taskIdParamSchema = z.object({
 	id: z.coerce.number().int().positive(),
 })
 
+export type TaskIdParam = z.infer<typeof taskIdParamSchema>
 export type CreateTaskInput = z.infer<typeof createTaskSchema>
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>

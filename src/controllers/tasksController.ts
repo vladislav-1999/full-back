@@ -1,5 +1,5 @@
 import { tasksService } from '../services/tasksService.js'
-import type { CreateTaskInput, UpdateTaskInput } from '../schemas/taskSchemas.js'
+import type { CreateTaskInput, UpdateTaskInput, TaskIdParam } from '../schemas/taskSchemas.js'
 import { handleErrors } from './handleErrors.js'
 
 export const taskController = {
@@ -8,24 +8,24 @@ export const taskController = {
 		res.json(tasks)
 	}),
 
-	getById: handleErrors(async (req, res) => {
-		const { id } = req.params as unknown as { id: number }
+	getById: handleErrors<TaskIdParam>(async (req, res) => {
+		const { id } = req.params
 		res.json(await tasksService.getById(id))
 	}),
 
-	create: handleErrors(async (req, res) => {
-		const input = req.body as CreateTaskInput
+	create: handleErrors<Record<string, string>, CreateTaskInput>(async (req, res) => {
+		const input = req.body
 		res.status(201).json(await tasksService.create(input))
 	}),
 
-	update: handleErrors(async (req, res) => {
-		const { id } = req.params as unknown as { id: number }
-		const input = req.body as UpdateTaskInput
+	update: handleErrors<TaskIdParam, UpdateTaskInput>(async (req, res) => {
+		const { id } = req.params
+		const input = req.body
 		res.json(await tasksService.update(id, input))
 	}),
 
-	remove: handleErrors(async (req, res) => {
-		const { id } = req.params as unknown as { id: number }
+	remove: handleErrors<TaskIdParam>(async (req, res) => {
+		const { id } = req.params
 		await tasksService.remove(id)
 		res.status(204).end()
 	}),
