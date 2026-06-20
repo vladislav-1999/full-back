@@ -3,30 +3,30 @@ import type { CreateTaskInput, UpdateTaskInput, TaskIdParam } from '../schemas/t
 import { handleErrors } from './handleErrors.js'
 
 export const taskController = {
-	getAll: handleErrors(async (_req, res) => {
-		const tasks = await tasksService.getAll()
+	getAll: handleErrors(async (req, res) => {
+		const tasks = await tasksService.getAll(req.user!.id)
 		res.json(tasks)
 	}),
 
 	getById: handleErrors<TaskIdParam>(async (req, res) => {
 		const { id } = req.params
-		res.json(await tasksService.getById(id))
+		res.json(await tasksService.getById(id, req.user!.id))
 	}),
 
 	create: handleErrors<Record<string, string>, CreateTaskInput>(async (req, res) => {
 		const input = req.body
-		res.status(201).json(await tasksService.create(input))
+		res.status(201).json(await tasksService.create(input, req.user!.id))
 	}),
 
 	update: handleErrors<TaskIdParam, UpdateTaskInput>(async (req, res) => {
 		const { id } = req.params
 		const input = req.body
-		res.json(await tasksService.update(id, input))
+		res.json(await tasksService.update(id, input, req.user!.id))
 	}),
 
 	remove: handleErrors<TaskIdParam>(async (req, res) => {
 		const { id } = req.params
-		await tasksService.remove(id)
+		await tasksService.remove(id, req.user!.id)
 		res.status(204).end()
 	}),
 }
