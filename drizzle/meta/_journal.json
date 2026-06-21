@@ -29,6 +29,13 @@
       "when": 1781972558237,
       "tag": "0003_wise_jackpot",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782042376129,
+      "tag": "0004_lovely_donald_blake",
+      "breakpoints": true
     }
   ]
 }

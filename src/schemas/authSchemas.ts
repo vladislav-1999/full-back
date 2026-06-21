@@ -23,5 +23,12 @@ export const publicUserSchema = z
 	})
 	.meta({ id: 'PublicUser' })
 
+export const refreshSchema = z
+	.object({
+		refreshToken: z.string().min(1),
+	})
+	.meta({ id: 'RefreshInput' })
+
 export type RegisterInput = z.infer<typeof registerSchema>
 export type LoginInput = z.infer<typeof loginSchema>
+export type RefreshInput = z.infer<typeof refreshSchema>

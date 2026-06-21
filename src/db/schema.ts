@@ -16,3 +16,14 @@ export const users = pgTable('users', {
 	role: varchar().notNull().default('user'),
 	createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 })
+
+export const refreshTokens = pgTable('refresh_tokens', {
+	id: integer().primaryKey().generatedByDefaultAsIdentity(),
+	userId: integer()
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	tokenHash: varchar({ length: 64 }).notNull().unique(),
+	expiresAt: timestamp({ withTimezone: true }).notNull(),
+	revokedAt: timestamp({ withTimezone: true }),
+	createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+})
