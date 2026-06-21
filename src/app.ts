@@ -14,6 +14,9 @@ app.use(express.json())
 app.use('/tasks', requireAuth, tasksRoutes)
 app.use('/auth', authRoutes)
 
+app.get('/openapi.json', (_req, res) => {
+	res.json(openapiDocument)
+})
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiDocument))
 
 export default app
