@@ -29,6 +29,13 @@ export const refreshSchema = z
 	})
 	.meta({ id: 'RefreshInput' })
 
+export const tokenPairSchema = z
+	.object({
+		accessToken: z.string(),
+		refreshToken: z.string(),
+	})
+	.meta({ id: 'TokenPair' })
+
 export type RegisterInput = z.infer<typeof registerSchema>
 export type LoginInput = z.infer<typeof loginSchema>
 export type RefreshInput = z.infer<typeof refreshSchema>

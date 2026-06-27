@@ -63,14 +63,57 @@ export const openapiDocument = {
 						content: {
 							'application/json': {
 								schema: {
-									type: 'object',
-									properties: { token: { type: 'string' } },
+									$ref: '#/components/schemas/TokenPair',
 								},
 							},
 						},
 					},
 					'400': { description: 'Validation error' },
 					'401': { description: 'Invalid credentials' },
+				},
+			},
+		},
+		'/auth/refresh': {
+			post: {
+				tags: ['Auth'],
+				summary: 'Обновление токенов (ротация)',
+				requestBody: {
+					required: true,
+					content: {
+						'application/json': {
+							schema: { $ref: '#/components/schemas/RefreshInput' },
+						},
+					},
+				},
+				responses: {
+					'200': {
+						description: 'Новая пара токенов',
+						content: {
+							'application/json': {
+								schema: { $ref: '#/components/schemas/TokenPair' },
+							},
+						},
+					},
+					'400': { description: 'Validation error' },
+					'401': { description: 'Invalid or expired refresh token' },
+				},
+			},
+		},
+		'/auth/logout': {
+			post: {
+				tags: ['Auth'],
+				summary: 'Выход (отзыв refresh-токена)',
+				requestBody: {
+					required: true,
+					content: {
+						'application/json': {
+							schema: { $ref: '#/components/schemas/RefreshInput' },
+						},
+					},
+				},
+				responses: {
+					'204': { description: 'Выход выполнен' },
+					'400': { description: 'Validation error' },
 				},
 			},
 		},
