@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d/student/front/**)",
+      "Bash(ls -la 'D:\\\\student\\\\front' | grep -iE 'docker|compose' || echo \"NO compose file in front root\")",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('ioredis:', p.dependencies?.ioredis||'MISSING'\\); console.log\\('server-only:', p.dependencies?.['server-only']||'MISSING'\\)\")",
+      "Bash(cd /d/student/front && echo \"=== api/session ===\" && ls -la api/session/ 2>&1 || echo \"no api/session dir\")",
+      "Read(//d/student/front/api/session/**)",
+      "Bash(grep -rinE \"API|BASE|3001|localhost\" .env .env.development)",
+      "Read(//d/student/front/api/auth/**)",
+      "Read(//d/student/front/api/**)",
+      "Read(//d/student/front/app/api/auth/login/**)",
+      "Bash(cd /d/student/front && echo \"=== app/api/auth/login ===\" && ls -la app/api/auth/login/ 2>&1 || echo \"no such dir\")",
+      "Bash(find . -path ./node_modules -prune -o -name \"route.ts\" -print)",
+      "Bash(find . -path ./node_modules -prune -o -name \"layout.tsx\" -print)",
+      "Read(//d/student/front/app/api/tasks/[[...path]]/**)",
+      "Read(//d/student/front/api/auth/queries/**)",
+      "Read(//d/student/front/app/api/auth/register/**)",
+      "Read(//d/student/front/app/api/auth/me/**)"
+    ]
+  }
+}
