@@ -46,14 +46,14 @@ describe('POST /auth/register (integration)', () => {
 	})
 })
 
-async function signupAndLogin(email: string): Promise<string> {
+async function signupAndLogin(email: string): Promise<{ accessToken: string; refreshToken: string }> {
 	const password = '12345678'
 
 	await request(app).post('/auth/register').send({ email, password }).expect(201)
 
 	const res = await request(app).post('/auth/login').send({ email, password }).expect(200)
 
-	return res.body.accessToken
+	return res.body
 }
 
 describe('защита /tasks (requireAuth)', () => {
@@ -67,22 +67,29 @@ describe('защита /tasks (requireAuth)', () => {
 })
 
 describe('полный поток + IDOR (integration)', () => {
-	it('register -> login -> create -> list: юзер работает со своими задачами', async () => {
-		const token = await signupAndLogin('alice@example.com')
-		const created = await request(app).post('/tasks').set('Authorization', `Bearer ${token}`).send({ title: 'купить кофе' }).expect(201)
+	it('register -> login -> create -> list -> patch -> delete: полный CRUD своих задач', async () => {
+		const { accessToken } = await signupAndLogin('alice@example.com')
+		const created = await request(app).post('/tasks').set('Authorization', `Bearer ${accessToken}`).send({ title: 'купить кофе' }).expect(201)
 
 		expect(created.body).toMatchObject({ title: 'купить кофе', done: false })
 		expect(created.body).not.toHaveProperty('userId')
 
-		const list = await request(app).get('/tasks').set('Authorization', `Bearer ${token}`).expect(200)
+		const list = await request(app).get('/tasks').set('Authorization', `Bearer ${accessToken}`).expect(200)
 
 		expect(list.body).toHaveLength(1)
 		expect(list.body[0]).toMatchObject({ id: created.body.id, title: 'купить кофе' })
+
+		const patched = await request(app).patch(`/tasks/${created.body.id}`).set('Authorization', `Bearer ${accessToken}`).send({ done: true }).expect(200)
+
+		expect(patched.body).toMatchObject({ id: created.body.id, title: 'купить кофе', done: true })
+
+		await request(app).delete(`/tasks/${created.body.id}`).set('Authorization', `Bearer ${accessToken}`).expect(204)
+		await request(app).get(`/tasks/${created.body.id}`).set('Authorization', `Bearer ${accessToken}`).expect(404)
 	})
 
 	it('IDOR: чужая задача недоступна на чтение/измененние/удаление -> 404', async () => {
-		const aliceToken = await signupAndLogin('alice@example.com')
-		const bobToken = await signupAndLogin('bob@example.com')
+		const { accessToken: aliceToken } = await signupAndLogin('alice@example.com')
+		const { accessToken: bobToken } = await signupAndLogin('bob@example.com')
 
 		const created = await request(app).post('/tasks').set('Authorization', `Bearer ${aliceToken}`).send({ title: 'секрет Алисы' }).expect(201)
 		const taskId = created.body.id
@@ -98,5 +105,29 @@ describe('полный поток + IDOR (integration)', () => {
 		const bobList = await request(app).get('/tasks').set('Authorization', `Bearer ${bobToken}`).expect(200)
 
 		expect(bobList.body).toHaveLength(0)
+	})
+})
+
+describe('refresh + logout (integration)', () => {
+	it('ротация: refresh -> новая пара; reuse старого -> 401 + каскадный отзыв', async () => {
+		const { refreshToken: r0 } = await signupAndLogin('rotate@example.com')
+
+		const res1 = await request(app).post('/auth/refresh').send({ refreshToken: r0 }).expect(200)
+		const r1: string = res1.body.refreshToken
+
+		expect(res1.body).toMatchObject({ accessToken: expect.any(String), refreshToken: expect.any(String) })
+		expect(r1).not.toBe(r0)
+
+		await request(app).post('/auth/refresh').send({ refreshToken: r0 }).expect(401)
+		await request(app).post('/auth/refresh').send({ refreshToken: r1 }).expect(401)
+	})
+
+	it('logout: 204 -> токен мертв -> повторный logout идемпотентен', async () => {
+		const { refreshToken } = await signupAndLogin('logout@example.com')
+
+		await request(app).post('/auth/logout').send({ refreshToken }).expect(204)
+		await request(app).post('/auth/refresh').send({ refreshToken }).expect(401)
+		await request(app).post('/auth/logout').send({ refreshToken }).expect(204)
+		await request(app).post('/auth/logout').send({ refreshToken: 'never-existed' }).expect(204)
 	})
 })
