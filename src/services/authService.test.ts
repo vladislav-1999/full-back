@@ -28,7 +28,7 @@ vi.mock('../lib/tokens.js', () => ({
 import { authService } from './authService.js'
 import { usersRepository } from '../repositories/usersRepository.js'
 import { refreshTokensRepository } from '../repositories/refreshTokenRepository.js'
-import { UnauthorizedError } from '../errors.js'
+import { ConflictError, UnauthorizedError } from '../errors.js'
 import argon2 from 'argon2'
 import type { User } from '../types/user.js'
 import { createHash } from 'node:crypto'
@@ -154,5 +154,21 @@ describe('authService.refresh', () => {
 		vi.mocked(usersRepository.findById).mockResolvedValue(undefined)
 
 		await expect(authService.refresh('x')).rejects.toThrow('Invalid refresh token')
+	})
+})
+
+describe('authService.register', () => {
+	beforeEach(() => {
+		beforeEach(() => {
+			vi.clearAllMocks
+		})
+	})
+
+	it('НЕ-unique ошибка БД пробрасывается как есть, не превращается в 409', async () => {
+		const dbError = new Error('connection lost')
+		vi.mocked(usersRepository.create).mockRejectedValue(dbError)
+
+		await expect(authService.register({ email: 'a@b.com', password: '12345678' })).rejects.toThrow('connection lost')
+		await expect(authService.register({ email: 'a@b.com', password: '12345678' })).rejects.not.toBeInstanceOf(ConflictError)
 	})
 })
