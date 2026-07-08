@@ -28,7 +28,7 @@ vi.mock('../lib/tokens.js', () => ({
 import { authService } from './authService.js'
 import { usersRepository } from '../repositories/usersRepository.js'
 import { refreshTokensRepository } from '../repositories/refreshTokenRepository.js'
-import { ConflictError, UnauthorizedError } from '../errors.js'
+import { ConflictError } from '../errors.js'
 import argon2 from 'argon2'
 import type { User } from '../types/user.js'
 import { createHash } from 'node:crypto'

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { it, expect } from 'vitest'
 import { registerSchema } from './authSchemas.js'
 
 it('валидные данные приходят', () => {
