@@ -117,6 +117,25 @@ export const openapiDocument = {
 				},
 			},
 		},
+		'/admin/users': {
+			get: {
+				tags: ['Admin'],
+				summary: 'Список всех пользователей (только admin)',
+				security: [{ bearerAuth: [] }],
+				responses: {
+					'200': {
+						description: 'Список пользователей',
+						content: {
+							'application/json': {
+								schema: { type: 'array', items: { $ref: '#/components/schemas/PublicUser' } },
+							},
+						},
+					},
+					'401': { description: 'Missing or malformed token' },
+					'403': { description: 'Forbidden: требуется роль admin' },
+				},
+			},
+		},
 		'/tasks': {
 			get: {
 				tags: ['Tasks'],
