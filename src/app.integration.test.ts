@@ -131,3 +131,45 @@ describe('refresh + logout (integration)', () => {
 		await request(app).post('/auth/logout').send({ refreshToken: 'never-existed' }).expect(204)
 	})
 })
+
+async function signupAdminAndLogin(email: string): Promise<{ accessToken: string }> {
+	const password = '12345678'
+
+	await request(app).post('/auth/register').send({ email, password }).expect(201)
+	await db.update(users).set({ role: 'admin' }).where(eq(users.email, email))
+
+	const res = await request(app).post('/auth/login').send({ email, password }).expect(200)
+
+	return res.body
+}
+
+describe('RBAC: GET /admin/users (requireAuth+ requireRole)', () => {
+	it('Без токена -> 401 (обрыв на requireAuth), до requireRole не дошло', async () => {
+		const res = await request(app).get('/admin/users').expect(401)
+
+		expect(res.body).toMatchObject({ error: 'Missing or malformed token' })
+	})
+
+	it('валидный токен обычного юзера -> 403 Forbidden (AuthN прошла, AuthZ - нет', async () => {
+		const { accessToken } = await signupAndLogin('plain@example.com')
+		const res = await request(app).get('/admin/users').set('Authorization', `Bearer ${accessToken}`).expect(403)
+
+		expect(res.body).toMatchObject({ error: 'Forbidden' })
+	})
+
+	it('admin -> 200 + список юзеров без passwordHash', async () => {
+		await signupAndLogin('plain@example.com')
+
+		const { accessToken } = await signupAdminAndLogin('boss@example.com')
+		const res = await request(app).get('/admin/users').set('Authorization', `Bearer ${accessToken}`).expect(200)
+
+		expect(res.body).toHaveLength(2)
+
+		for (const user of res.body) {
+			expect(user).not.toHaveProperty('passwordHash')
+		}
+
+		expect(res.body).toContainEqual(expect.objectContaining({ email: 'boss@example.com', role: 'admin' }))
+		expect(res.body).toContainEqual(expect.objectContaining({ email: 'plain@example.com', role: 'user' }))
+	})
+})
