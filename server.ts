@@ -1,9 +1,7 @@
-// Точка входа. Берёт собранное приложение и запускает на порту.
-
 import app from './src/app.js'
+import { env } from './src/config.js'
+import { logger } from './src/lib/logger.js'
 
-const PORT = Number(process.env.PORT) || 3001
-
-app.listen(PORT, () => {
-	console.log(`Server is running on port ${PORT}`)
+app.listen(env.PORT, () => {
+	logger.info({ port: env.PORT }, 'Server started')
 })
