@@ -11,7 +11,7 @@ jobs:
         runs-on: ubuntu-latest
         env:
             DATABASE_URL: postgresql://test:test@localhost:5432/todo_test
-            JWT_SECRET: ci-test-secret-not-real
+            JWT_SECRET: ci-test-secret-not-real-0123456789
         services:
             postgres:
                 image: postgres:16
