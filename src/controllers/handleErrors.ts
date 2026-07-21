@@ -1,6 +1,5 @@
 import type { Request, Response, RequestHandler } from 'express'
 import { NotFoundError, ConflictError, UnauthorizedError } from '../errors.js'
-import { logger } from '../lib/logger.js'
 
 export function handleErrors<P = Record<string, string>, ReqBody = unknown>(
 	fn: (req: Request<P, unknown, ReqBody>, res: Response) => void | Promise<void>,
@@ -21,7 +20,7 @@ export function handleErrors<P = Record<string, string>, ReqBody = unknown>(
 				res.status(401).json({ error: err.message })
 				return
 			}
-			logger.error({ err }, 'Unhandled error')
+			res.err = err instanceof Error ? err : new Error(String(err))
 			res.status(500).json({ error: 'Internal server error' })
 		}
 	}
