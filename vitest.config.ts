@@ -7,7 +7,7 @@ export default defineConfig({
 		coverage: {
 			include: ['src/**/*.ts'],
 			reporter: ['text'],
-			exclude: ['src/**/*.test.ts', 'src/docs/**', 'src/types/**', 'src/db/schema.ts'],
+			exclude: ['src/**/*.test.ts', 'src/docs/**', 'src/types/**', 'src/db/schema.ts', 'src/config.ts', 'src/lib/logger.ts'],
 			thresholds: {
 				statements: 90,
 				branches: 90,

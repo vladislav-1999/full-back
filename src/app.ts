@@ -7,10 +7,13 @@ import swaggerUi from 'swagger-ui-express'
 import { openapiDocument } from './docs/openapi.js'
 import { requireRole } from './middlewares/requireRole.js'
 import adminRoutes from './routes/adminRoutes.js'
+import { httpLogger } from './lib/httpLogger.js'
 
 const app = express()
 
 app.use(cors({ origin: 'http://localhost:3000' }))
+
+app.use(httpLogger)
 
 app.use(express.json())
 
