@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { logger } from './logger.js'
 
 const REQUEST_ID_HEADER = 'x-request-id'
+const SILENT_PATHS = ['/docs', '/health']
 
 export const genReqId: NonNullable<Options['genReqId']> = (req, res) => {
 	const existing = req.headers[REQUEST_ID_HEADER]
@@ -28,6 +29,6 @@ export const httpLogger = pinoHttp({
 	genReqId,
 	customLogLevel,
 	autoLogging: {
-		ignore: (req) => req.url?.startsWith('/docs') ?? false,
+		ignore: (req) => SILENT_PATHS.some((path) => req.url?.startsWith(path) ?? false),
 	},
 })
