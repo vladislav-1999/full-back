@@ -25,6 +25,10 @@ app.get('/openapi.json', (_req, res) => {
 	res.json(openapiDocument)
 })
 
+app.get('/health', (_req, res) => {
+	res.json({ status: 'ok', uptime: process.uptime() })
+})
+
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiDocument))
 
 app.use('/admin', requireAuth, requireRole('admin'), adminRoutes)

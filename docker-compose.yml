@@ -15,5 +15,25 @@ services:
             timeout: 5s
             retries: 5
 
+    api:
+        stop_grace_period: 15s
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: runtime
+        image: todo-api:dev
+        container_name: todo-api
+        restart: unless-stopped
+        ports:
+            - '3001:3001'
+        init: true
+        env_file:
+            - .env
+        environment:
+            DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+            NODE_ENV: production
+        depends_on:
+            db:
+                condition: service_healthy
 volumes:
     pgdata:
