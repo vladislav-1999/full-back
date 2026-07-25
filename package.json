@@ -2,7 +2,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "tsx watch server.ts",
-		"build": "tsc",
+		"build": "tsc -p tsconfig.build.json",
 		"start": "node dist/server.js",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest",
