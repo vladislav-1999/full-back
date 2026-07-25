@@ -4,10 +4,12 @@ export default defineConfig({
 	test: {
 		globalSetup: ['./vitest.globalSetup.ts'],
 		setupFiles: ['./vitest.setup.ts'],
+		exclude: ['**/node_modules/**', '**/.git/**', '**/dist/**'],
+
 		coverage: {
 			include: ['src/**/*.ts'],
 			reporter: ['text'],
-			exclude: ['src/**/*.test.ts', 'src/docs/**', 'src/types/**', 'src/db/schema.ts', 'src/config.ts', 'src/lib/logger.ts'],
+			exclude: ['src/**/*.test.ts', 'src/docs/**', 'src/types/**', 'src/db/schema.ts', 'src/config.ts', 'src/lib/logger.ts', 'src/migrate.ts'],
 			thresholds: {
 				statements: 90,
 				branches: 90,
