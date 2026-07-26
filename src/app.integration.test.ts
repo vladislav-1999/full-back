@@ -173,3 +173,15 @@ describe('RBAC: GET /admin/users (requireAuth+ requireRole)', () => {
 		expect(res.body).toContainEqual(expect.objectContaining({ email: 'plain@example.com', role: 'user' }))
 	})
 })
+
+describe('сквозные заголовки (helmet)', () => {
+	it('не раскрывает фреймворк и ставит защитные заголовки', async () => {
+		const res = await request(app).get('/health')
+
+		expect(res.status).toBe(200)
+
+		expect(res.headers['x-powered-by']).toBeUndefined()
+
+		expect(res.headers['x-content-type-options']).toBe('nosniff')
+	})
+})

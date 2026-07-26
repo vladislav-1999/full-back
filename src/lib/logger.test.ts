@@ -20,6 +20,7 @@ function makeDrizzleError(): Error {
 describe('errSerializer', () => {
 	it('не выпускает значения параметров запроса в лог', () => {
 		const serialized = errSerializer(makeDrizzleError())
+
 		const asText = JSON.stringify(serialized)
 
 		expect(asText).not.toContain(EMAIL)

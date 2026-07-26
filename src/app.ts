@@ -8,10 +8,25 @@ import { openapiDocument } from './docs/openapi.js'
 import { requireRole } from './middlewares/requireRole.js'
 import adminRoutes from './routes/adminRoutes.js'
 import { httpLogger } from './lib/httpLogger.js'
+import { env } from './config.js'
+import helmet from 'helmet'
 
 const app = express()
 
-app.use(cors({ origin: 'http://localhost:3000' }))
+app.use(
+	helmet({
+		contentSecurityPolicy: {
+			directives: {
+				...helmet.contentSecurityPolicy.getDefaultDirectives(),
+				'script-src': ["'self'", "'unsafe-inline'"],
+				'style-src': ["'self'", "'unsafe-inline'"],
+				'img-src': ["'self'", 'data:', 'validator.swagger.io'],
+			},
+		},
+	}),
+)
+
+app.use(cors({ origin: env.CORS_ORIGIN }))
 
 app.use(httpLogger)
 
