@@ -12,7 +12,6 @@ services:
                   name: ghcr-vladislav
       healthCheckPath: /health
 
-      preDeployCommand: node dist/src/migrate.js
       envVars:
           - key: DATABASE_URL
             fromDatabase:
