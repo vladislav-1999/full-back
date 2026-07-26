@@ -7,7 +7,9 @@ services:
 
       image:
           url: ghcr.io/vladislav-1999/full-back:dev
-          creds: ghcr-vladislav
+          creds:
+              fromRegistryCreds:
+                  name: ghcr-vladislav
       healthCheckPath: /health
 
       preDeployCommand: node dist/src/migrate.js
