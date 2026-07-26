@@ -7,6 +7,16 @@ const envSchema = z.object({
 	PORT: z.coerce.number().int().positive().max(65535).default(3001),
 	NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 	LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+	CORS_ORIGIN: z
+		.string()
+		.default('http://localhost:3000')
+		.transform((raw) =>
+			raw
+				.split(',')
+				.map((origin) => origin.trim())
+				.filter(Boolean),
+		)
+		.pipe(z.array(z.url()).nonempty()),
 })
 
 const result = envSchema.safeParse(process.env)
