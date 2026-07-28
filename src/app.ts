@@ -16,6 +16,25 @@ import { isShuttingDown } from './lib/serverState.js'
 
 const app = express()
 
+app.use(
+	helmet({
+		contentSecurityPolicy: {
+			directives: {
+				...helmet.contentSecurityPolicy.getDefaultDirectives(),
+				'script-src': ["'self'", "'unsafe-inline'"],
+				'style-src': ["'self'", "'unsafe-inline'"],
+				'img-src': ["'self'", 'data:', 'validator.swagger.io'],
+			},
+		},
+	}),
+)
+
+app.use(cors({ origin: env.CORS_ORIGIN }))
+
+app.use(httpLogger)
+
+app.use(express.json())
+
 app.get('/health', (_req, res) => {
 	res.json({ status: 'ok', uptime: process.uptime() })
 })
@@ -36,25 +55,6 @@ app.get('/ready', async (req, res) => {
 		res.status(503).json({ status: 'db_unavailable' })
 	}
 })
-
-app.use(
-	helmet({
-		contentSecurityPolicy: {
-			directives: {
-				...helmet.contentSecurityPolicy.getDefaultDirectives(),
-				'script-src': ["'self'", "'unsafe-inline'"],
-				'style-src': ["'self'", "'unsafe-inline'"],
-				'img-src': ["'self'", 'data:', 'validator.swagger.io'],
-			},
-		},
-	}),
-)
-
-app.use(cors({ origin: env.CORS_ORIGIN }))
-
-app.use(httpLogger)
-
-app.use(express.json())
 
 app.use('/tasks', requireAuth, tasksRoutes)
 
