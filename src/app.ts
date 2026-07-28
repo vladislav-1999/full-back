@@ -10,8 +10,32 @@ import adminRoutes from './routes/adminRoutes.js'
 import { httpLogger } from './lib/httpLogger.js'
 import { env } from './config.js'
 import helmet from 'helmet'
+import { sql } from 'drizzle-orm'
+import { db } from './db/index.js'
+import { isShuttingDown } from './lib/serverState.js'
 
 const app = express()
+
+app.get('/health', (_req, res) => {
+	res.json({ status: 'ok', uptime: process.uptime() })
+})
+
+app.get('/ready', async (req, res) => {
+	if (isShuttingDown()) {
+		res.status(503).json({ status: 'shutting_down' })
+		return
+	}
+
+	try {
+		await db.execute(sql`select 1`)
+
+		res.json({ status: 'ready' })
+	} catch (err) {
+		req.log.error({ err }, 'Readiness check failed')
+
+		res.status(503).json({ status: 'db_unavailable' })
+	}
+})
 
 app.use(
 	helmet({

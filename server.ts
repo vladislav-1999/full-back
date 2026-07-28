@@ -2,6 +2,7 @@ import app from './src/app.js'
 import { env } from './src/config.js'
 import { logger } from './src/lib/logger.js'
 import { db } from './src/db/index.js'
+import { isShuttingDown, markShuttingDown } from './src/lib/serverState.js'
 
 const server = app.listen(env.PORT, () => {
 	logger.info({ port: env.PORT }, 'Server started')
@@ -12,8 +13,10 @@ const SHUTDOWN_TIMEOUT_MS = 10_000
 let shuttingDown = false
 
 async function shutdown(signal: NodeJS.Signals): Promise<void> {
-	if (shuttingDown) return
+	if (isShuttingDown()) return
 	shuttingDown = true
+
+	markShuttingDown()
 
 	logger.info({ signal }, 'Shutdown started')
 
