@@ -17,6 +17,7 @@ const envSchema = z.object({
 				.filter(Boolean),
 		)
 		.pipe(z.array(z.url()).nonempty()),
+	TRUST_PROXY: z.coerce.number().int().min(0).default(0),
 })
 
 const result = envSchema.safeParse(process.env)

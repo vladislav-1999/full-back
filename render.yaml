@@ -25,6 +25,8 @@ services:
             value: info
           - key: CORS_ORIGIN
             value: http://localhost:3000
+          - key: TRUST_PROXY
+            value: '3'
 databases:
     - name: todo-db-staging
       region: frankfurt
