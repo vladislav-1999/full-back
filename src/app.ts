@@ -72,4 +72,13 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiDocument))
 
 app.use('/admin', requireAuth, requireRole('admin'), adminRoutes)
 
+app.get('/debug/ip', (req, res) => {
+	res.json({
+		ip: req.ip, // что Express считает адресом клиента СЕЙЧАС
+		ips: req.ips, // разобранная цепочка (пустая, пока trust proxy выключен)
+		xForwardedFor: req.headers['x-forwarded-for'], // сырой заголовок как есть
+		trustProxy: req.app.get('trust proxy'),
+	})
+})
+
 export default app
