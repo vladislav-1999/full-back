@@ -10,11 +10,8 @@ const server = app.listen(env.PORT, () => {
 
 const SHUTDOWN_TIMEOUT_MS = 10_000
 
-let shuttingDown = false
-
 async function shutdown(signal: NodeJS.Signals): Promise<void> {
 	if (isShuttingDown()) return
-	shuttingDown = true
 
 	markShuttingDown()
 
