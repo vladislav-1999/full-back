@@ -10,7 +10,7 @@ services:
           creds:
               fromRegistryCreds:
                   name: ghcr-vladislav
-      healthCheckPath: /health
+      healthCheckPath: /ready
 
       envVars:
           - key: DATABASE_URL
