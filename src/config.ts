@@ -18,6 +18,9 @@ const envSchema = z.object({
 		)
 		.pipe(z.array(z.url()).nonempty()),
 	TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+	RATE_LIMIT_API: z.coerce.number().int().positive().default(300),
+	RATE_LIMIT_LOGIN: z.coerce.number().int().positive().default(5),
+	RATE_LIMIT_REGISTER: z.coerce.number().int().positive().default(10),
 })
 
 const result = envSchema.safeParse(process.env)

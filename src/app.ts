@@ -13,6 +13,7 @@ import helmet from 'helmet'
 import { sql } from 'drizzle-orm'
 import { db } from './db/index.js'
 import { isShuttingDown } from './lib/serverState.js'
+import { apiLimiter, loginLimiter, registerLimiter } from './lib/rateLimiters.js'
 
 const app = express()
 
@@ -57,6 +58,12 @@ app.get('/ready', async (req, res) => {
 		res.status(503).json({ status: 'db_unavailable' })
 	}
 })
+
+app.use(apiLimiter)
+
+app.post('/auth/login', loginLimiter)
+
+app.post('/auth/register', registerLimiter)
 
 app.use('/tasks', requireAuth, tasksRoutes)
 
