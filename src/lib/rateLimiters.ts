@@ -15,7 +15,7 @@ export const loginLimiter = rateLimit({
 	standardHeaders: 'draft-8',
 	legacyHeaders: false,
 	skipSuccessfulRequests: true,
-	message: { error: 'Too login attempts' },
+	message: { error: 'Too many login attempts' },
 })
 
 export const registerLimiter = rateLimit({
