@@ -13,6 +13,7 @@ import helmet from 'helmet'
 import { sql } from 'drizzle-orm'
 import { db } from './db/index.js'
 import { isShuttingDown } from './lib/serverState.js'
+import { apiLimiter, loginLimiter, registerLimiter } from './lib/rateLimiters.js'
 
 const app = express()
 
@@ -58,6 +59,12 @@ app.get('/ready', async (req, res) => {
 	}
 })
 
+app.use(apiLimiter)
+
+app.post('/auth/login', loginLimiter)
+
+app.post('/auth/register', registerLimiter)
+
 app.use('/tasks', requireAuth, tasksRoutes)
 
 app.use('/auth', authRoutes)
@@ -73,14 +80,5 @@ app.get('/health', (_req, res) => {
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiDocument))
 
 app.use('/admin', requireAuth, requireRole('admin'), adminRoutes)
-
-app.get('/debug/ip', (req, res) => {
-	res.json({
-		ip: req.ip, // что Express считает адресом клиента СЕЙЧАС
-		ips: req.ips, // разобранная цепочка (пустая, пока trust proxy выключен)
-		xForwardedFor: req.headers['x-forwarded-for'], // сырой заголовок как есть
-		trustProxy: req.app.get('trust proxy'),
-	})
-})
 
 export default app

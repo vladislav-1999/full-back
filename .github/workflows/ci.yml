@@ -16,6 +16,9 @@ jobs:
         env:
             DATABASE_URL: postgresql://test:test@localhost:5432/todo_test
             JWT_SECRET: ci-test-secret-not-real-0123456789
+            RATE_LIMIT_API: '100000'
+            RATE_LIMIT_LOGIN: '100000'
+            RATE_LIMIT_REGISTER: '100000'
         services:
             postgres:
                 image: postgres:16
