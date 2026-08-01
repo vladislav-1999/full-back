@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest'
 import request from 'supertest'
-import { sql, eq } from 'drizzle-orm'
+import { sql, eq, isNull } from 'drizzle-orm'
+import { users, refreshTokens } from './db/schema.js'
 import app from './app.js'
 import { db } from './db/index.js'
-import { users } from './db/schema.js'
 
 beforeEach(async () => {
 	await db.execute(sql`TRUNCATE tasks, users, refresh_tokens RESTART IDENTITY CASCADE`)
@@ -129,6 +129,47 @@ describe('refresh + logout (integration)', () => {
 		await request(app).post('/auth/refresh').send({ refreshToken }).expect(401)
 		await request(app).post('/auth/logout').send({ refreshToken }).expect(204)
 		await request(app).post('/auth/logout').send({ refreshToken: 'never-existed' }).expect(204)
+	})
+
+	it('параллельный refresh одним токеном: ровно один 200, второй 401', async () => {
+		const { refreshToken: r0 } = await signupAndLogin('race@example.com')
+		const [a, b] = await Promise.all([
+			request(app).post('/auth/refresh').send({ refreshToken: r0 }),
+			request(app).post('/auth/refresh').send({ refreshToken: r0 }),
+		])
+
+		expect([a.status, b.status].sort()).toEqual([200, 401])
+
+		const alive = await db.select().from(refreshTokens).where(isNull(refreshTokens.revokedAt))
+
+		expect(alive).toHaveLength(0)
+	})
+
+	it('просроченный refresh -> 401 Refresh token expired, каскадный отзыв не срабатывает', async () => {
+		const { refreshToken } = await signupAndLogin('expired@example.com')
+
+		await db.update(refreshTokens).set({ expiresAt: new Date(Date.now() - 1000) })
+
+		const res = await request(app).post('/auth/refresh').send({ refreshToken }).expect(401)
+
+		expect(res.body).toMatchObject({ error: 'Refresh token expired' })
+
+		const rows = await db.select().from(refreshTokens)
+
+		expect(rows).toHaveLength(1)
+		expect(rows[0]!.revokedAt).toBeNull()
+	})
+	it('ротация атомарна: после refresh ровно один живой токен, старый отозван', async () => {
+		const { refreshToken: r0 } = await signupAndLogin('atomic@example.com')
+
+		await request(app).post('/auth/refresh').send({ refreshToken: r0 }).expect(200)
+
+		const rows = await db.select().from(refreshTokens).orderBy(refreshTokens.id)
+
+		expect(rows).toHaveLength(2)
+		expect(rows.filter((r) => r.revokedAt === null)).toHaveLength(1)
+		expect(rows[0]!.revokedAt).not.toBeNull()
+		expect(rows[1]!.revokedAt).toBeNull()
 	})
 })
 

@@ -1,13 +1,17 @@
-import { pgTable, integer, varchar, boolean, timestamp } from 'drizzle-orm/pg-core'
+import { pgTable, integer, varchar, boolean, timestamp, index } from 'drizzle-orm/pg-core'
 
-export const tasks = pgTable('tasks', {
-	id: integer().primaryKey().generatedAlwaysAsIdentity(),
-	title: varchar({ length: 200 }).notNull(),
-	done: boolean().notNull().default(false),
-	userId: integer()
-		.notNull()
-		.references(() => users.id, { onDelete: 'cascade' }),
-})
+export const tasks = pgTable(
+	'tasks',
+	{
+		id: integer().primaryKey().generatedAlwaysAsIdentity(),
+		title: varchar({ length: 200 }).notNull(),
+		done: boolean().notNull().default(false),
+		userId: integer()
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+	},
+	(table) => [index('tasks_user_id_idx').on(table.userId)],
+)
 
 export const users = pgTable('users', {
 	id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -17,13 +21,17 @@ export const users = pgTable('users', {
 	createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 })
 
-export const refreshTokens = pgTable('refresh_tokens', {
-	id: integer().primaryKey().generatedByDefaultAsIdentity(),
-	userId: integer()
-		.notNull()
-		.references(() => users.id, { onDelete: 'cascade' }),
-	tokenHash: varchar({ length: 64 }).notNull().unique(),
-	expiresAt: timestamp({ withTimezone: true }).notNull(),
-	revokedAt: timestamp({ withTimezone: true }),
-	createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-})
+export const refreshTokens = pgTable(
+	'refresh_tokens',
+	{
+		id: integer().primaryKey().generatedByDefaultAsIdentity(),
+		userId: integer()
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		tokenHash: varchar({ length: 64 }).notNull().unique(),
+		expiresAt: timestamp({ withTimezone: true }).notNull(),
+		revokedAt: timestamp({ withTimezone: true }),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [index('refresh_tokens_user_id_idx').on(table.userId)],
+)
