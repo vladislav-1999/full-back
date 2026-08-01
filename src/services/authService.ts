@@ -6,6 +6,7 @@ import argon2 from 'argon2'
 import { signAccessToken } from '../lib/tokens.js'
 import { refreshTokensRepository } from '../repositories/refreshTokenRepository.js'
 import { randomBytes, createHash } from 'node:crypto'
+import { db } from '../db/index.js'
 
 function generateRefreshToken(): string {
 	return randomBytes(32).toString('hex')
@@ -64,29 +65,36 @@ export const authService = {
 	},
 
 	async refresh(rawToken: string): Promise<TokenPair> {
-		const stored = await refreshTokensRepository.findByHash(hashToken(rawToken))
+		const result = await db.transaction(async (tx) => {
+			const stored = await refreshTokensRepository.findByHash(hashToken(rawToken), tx)
 
-		if (!stored) throw new UnauthorizedError('Invalid refresh token')
+			if (!stored) throw new UnauthorizedError('Invalid refresh token')
+			if (stored.revokedAt) {
+				await refreshTokensRepository.revokeAllForUser(stored.userId, tx)
+				return { ok: false as const }
+			}
 
-		if (stored.revokedAt) {
-			await refreshTokensRepository.revokeAllForUser(stored.userId)
-			throw new UnauthorizedError('Invalid refresh token')
-		}
+			if (stored.expiresAt < new Date()) {
+				throw new UnauthorizedError('Refresh token expired')
+			}
 
-		if (stored.expiresAt < new Date()) {
-			throw new UnauthorizedError('Refresh token expired')
-		}
+			await refreshTokensRepository.revoke(stored.id, tx)
 
-		await refreshTokensRepository.revoke(stored.id)
+			const user = await usersRepository.findById(stored.userId)
 
-		const user = await usersRepository.findById(stored.userId)
-		if (!user) throw new UnauthorizedError('Invalid refresh token')
+			if (!user) throw new UnauthorizedError('Invalid refresh token')
 
-		const accessToken = signAccessToken(user)
-		const refreshToken = generateRefreshToken()
-		const expiresAt = new Date(Date.now() + REFRESH_TTL_MS)
-		await refreshTokensRepository.create(user.id, hashToken(refreshToken), expiresAt)
+			const accessToken = signAccessToken(user)
+			const refreshToken = generateRefreshToken()
+			const expiresAt = new Date(Date.now() + REFRESH_TTL_MS)
 
-		return { accessToken, refreshToken }
+			await refreshTokensRepository.create(user.id, hashToken(refreshToken), expiresAt, tx)
+
+			return { ok: true as const, tokens: { accessToken, refreshToken } }
+		})
+
+		if (!result.ok) throw new UnauthorizedError('Invalid refresh token')
+
+		return result.tokens
 	},
 }

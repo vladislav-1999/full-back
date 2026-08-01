@@ -25,6 +25,12 @@ vi.mock('../lib/tokens.js', () => ({
 	signAccessToken: vi.fn(() => 'fake.access.token'),
 }))
 
+vi.mock('../db/index.js', () => ({
+	db: {
+		transaction: vi.fn(async (cb: (tx: unknown) => unknown) => cb('tx-stub')),
+	},
+}))
+
 import { authService } from './authService.js'
 import { usersRepository } from '../repositories/usersRepository.js'
 import { refreshTokensRepository } from '../repositories/refreshTokenRepository.js'
@@ -113,7 +119,7 @@ describe('authService.refresh', () => {
 
 		await expect(authService.refresh('stolen')).rejects.toThrow('Invalid refresh token')
 
-		expect(refreshTokensRepository.revokeAllForUser).toHaveBeenCalledWith(7)
+		expect(refreshTokensRepository.revokeAllForUser).toHaveBeenCalledWith(7, 'tx-stub')
 	})
 
 	it('И отозван, протух -> срабатывает ветка REUSE, а не "протух" (ПОРЯДОК веток)', async () => {
@@ -121,7 +127,7 @@ describe('authService.refresh', () => {
 
 		await expect(authService.refresh('x')).rejects.toThrow('Invalid refresh token')
 
-		expect(refreshTokensRepository.revokeAllForUser).toHaveBeenCalledWith(7)
+		expect(refreshTokensRepository.revokeAllForUser).toHaveBeenCalledWith(7, 'tx-stub')
 	})
 
 	it('Протух, но не отозван -> 401 "expired", без каскада, без ротации', async () => {
@@ -140,12 +146,13 @@ describe('authService.refresh', () => {
 
 		const result = await authService.refresh('valid-raw')
 
-		expect(refreshTokensRepository.revoke).toHaveBeenCalledWith(stored.id)
+		expect(refreshTokensRepository.revoke).toHaveBeenCalledWith(stored.id, 'tx-stub')
 		expect(result.accessToken).toBe('fake.access.token')
 		expect(result.refreshToken).toMatch(/[0-9a-f]{64}$/)
 
 		const newHash = createHash('sha256').update(result.refreshToken).digest('hex')
-		expect(refreshTokensRepository.create).toHaveBeenCalledWith(7, newHash, expect.any(Date))
+
+		expect(refreshTokensRepository.create).toHaveBeenCalledWith(7, newHash, expect.any(Date), 'tx-stub')
 		expect(refreshTokensRepository.revokeAllForUser).not.toHaveBeenCalled()
 	})
 
