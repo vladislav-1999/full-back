@@ -14,6 +14,8 @@ import { sql } from 'drizzle-orm'
 import { db } from './db/index.js'
 import { isShuttingDown } from './lib/serverState.js'
 import { apiLimiter, loginLimiter, registerLimiter } from './lib/rateLimiters.js'
+import type { Request, Response, NextFunction } from 'express'
+import { toHttpError, asError } from './lib/httpError.js'
 
 const app = express()
 
@@ -35,8 +37,6 @@ app.use(
 app.use(cors({ origin: env.CORS_ORIGIN }))
 
 app.use(httpLogger)
-
-app.use(express.json())
 
 app.get('/health', (_req, res) => {
 	res.json({ status: 'ok', uptime: process.uptime() })
@@ -65,20 +65,32 @@ app.post('/auth/login', loginLimiter)
 
 app.post('/auth/register', registerLimiter)
 
+app.use(express.json({ limit: '10kb' }))
+
 app.use('/tasks', requireAuth, tasksRoutes)
 
 app.use('/auth', authRoutes)
 
-app.get('/openapi.json', (_req, res) => {
-	res.json(openapiDocument)
-})
+if (env.ENABLE_DOCS) {
+	app.get('/openapi.json', (_req, res) => {
+		res.json(openapiDocument)
+	})
 
-app.get('/health', (_req, res) => {
-	res.json({ status: 'ok', uptime: process.uptime() })
-})
-
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiDocument))
+	app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiDocument))
+}
 
 app.use('/admin', requireAuth, requireRole('admin'), adminRoutes)
+
+app.use((_req, res) => {
+	res.status(404).json({ error: 'Not found' })
+})
+
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+	const { status, message } = toHttpError(err)
+
+	res.err = asError(err)
+
+	res.status(status).json({ error: message })
+})
 
 export default app

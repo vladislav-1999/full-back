@@ -10,7 +10,7 @@ export const registerSchema = z
 export const loginSchema = z
 	.object({
 		email: z.email().toLowerCase().min(1).max(255),
-		password: z.string(),
+		password: z.string().max(128),
 	})
 	.meta({ id: 'LoginInput' })
 
