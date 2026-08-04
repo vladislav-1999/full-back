@@ -15,6 +15,7 @@ export const loginLimiter = rateLimit({
 	standardHeaders: 'draft-8',
 	legacyHeaders: false,
 	skipSuccessfulRequests: true,
+	requestWasSuccessful: (_req, res) => res.statusCode < 400 || res.statusCode >= 500,
 	message: { error: 'Too many login attempts' },
 })
 
@@ -23,5 +24,7 @@ export const registerLimiter = rateLimit({
 	limit: env.RATE_LIMIT_REGISTER,
 	standardHeaders: 'draft-8',
 	legacyHeaders: false,
+	skipFailedRequests: true,
+	requestWasSuccessful: (_req, res) => res.statusCode < 500,
 	message: { error: 'Too many accounts created' },
 })

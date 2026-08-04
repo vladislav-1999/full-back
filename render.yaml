@@ -27,6 +27,8 @@ services:
             value: http://localhost:3000
           - key: TRUST_PROXY
             value: '3'
+          - key: ENABLE_DOCS
+            value: 'true'
 databases:
     - name: todo-db-staging
       region: frankfurt
