@@ -11,6 +11,18 @@ permissions:
     packages: write
 
 jobs:
+    audit:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: '24'
+            - name: Аудит прод-зависимостей (блокирующий)
+              run: npm audit --omit=dev --audit-level=high
+            - name: Аудит dev-зависимостей (только отчёт)
+              continue-on-error: true
+              run: npm audit --audit-level=moderate
     test:
         runs-on: ubuntu-latest
         env:
