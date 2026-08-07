@@ -23,6 +23,13 @@ export const publicUserSchema = z
 	})
 	.meta({ id: 'PublicUser' })
 
+export const userWithStatsSchema = publicUserSchema
+	.extend({
+		tasksCount: z.number().int().nonnegative(),
+		doneCount: z.number().int().nonnegative(),
+	})
+	.meta({ id: 'UserWithStats' })
+
 export const refreshSchema = z
 	.object({
 		refreshToken: z.string().min(1),

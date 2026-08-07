@@ -1,18 +1,23 @@
 import { db } from '../db/index.js'
-import { type User, PublicUser } from '../types/user.js'
-import { users } from '../db/schema.js'
-import { eq } from 'drizzle-orm'
-
-const publicUserColumns = {
-	id: users.id,
-	email: users.email,
-	role: users.role,
-	createdAt: users.createdAt,
-}
+import { type User, UserWithStats } from '../types/user.js'
+import { eq, count, sql } from 'drizzle-orm'
+import { users, tasks } from '../db/schema.js'
 
 export const usersRepository = {
-	async findAll(): Promise<PublicUser[]> {
-		return db.select(publicUserColumns).from(users)
+	async findAll(): Promise<UserWithStats[]> {
+		return db
+			.select({
+				id: users.id,
+				email: users.email,
+				role: users.role,
+				createdAt: users.createdAt,
+				tasksCount: count(tasks.id),
+				doneCount: sql<number>`count(*) filter (where ${tasks.done})`.mapWith(Number),
+			})
+			.from(users)
+			.leftJoin(tasks, eq(tasks.userId, users.id))
+			.groupBy(users.id)
+			.orderBy(users.id)
 	},
 	async findByEmail(email: string): Promise<User | undefined> {
 		const rows = await db.select().from(users).where(eq(users.email, email))

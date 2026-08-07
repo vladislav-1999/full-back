@@ -215,6 +215,25 @@ describe('RBAC: GET /admin/users (requireAuth+ requireRole)', () => {
 	})
 })
 
+describe('GET /admin/users: агрегаты по задачам (LEFT JOIN + GROUP BY)', () => {
+	it('считает задачи каждого юзера; юзер без задач -> 0/0', async () => {
+		await signupAndLogin('nobody@example.com')
+
+		const { accessToken } = await signupAdminAndLogin('boss@example.com')
+		const auth = { Authorization: `Bearer ${accessToken}` }
+		const first = await request(app).post('/tasks').set(auth).send({ title: 'Первая' }).expect(201)
+
+		await request(app).post('/tasks').set(auth).send({ title: 'Вторая' }).expect(201)
+		await request(app).patch(`/tasks/${first.body.id}`).set(auth).send({ done: true }).expect(200)
+
+		const res = await request(app).get('/admin/users').set(auth).expect(200)
+
+		expect(res.body).toContainEqual(expect.objectContaining({ email: 'boss@example.com', tasksCount: 2, doneCount: 1 }))
+		expect(res.body).toContainEqual(expect.objectContaining({ email: 'nobody@example.com', tasksCount: 0, doneCount: 0 }))
+		expect(res.body.map((u: { email: string }) => u.email)).toEqual(['nobody@example.com', 'boss@example.com'])
+	})
+})
+
 describe('сквозные заголовки (helmet)', () => {
 	it('не раскрывает фреймворк и ставит защитные заголовки', async () => {
 		const res = await request(app).get('/health')
