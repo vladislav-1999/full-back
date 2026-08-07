@@ -1,8 +1,8 @@
 import { usersRepository } from '../repositories/usersRepository.js'
-import type { PublicUser } from '../types/user.js'
+import type { UserWithStats } from '../types/user.js'
 
 export const usersService = {
-	async listUsers(): Promise<PublicUser[]> {
+	async listUsers(): Promise<UserWithStats[]> {
 		return usersRepository.findAll()
 	},
 }

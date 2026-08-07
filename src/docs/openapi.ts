@@ -127,7 +127,7 @@ export const openapiDocument = {
 						description: 'Список пользователей',
 						content: {
 							'application/json': {
-								schema: { type: 'array', items: { $ref: '#/components/schemas/PublicUser' } },
+								schema: { type: 'array', items: { $ref: '#/components/schemas/UserWithStats' } },
 							},
 						},
 					},
